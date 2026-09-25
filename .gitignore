@@ -1,0 +1,38 @@
+# Datasets
+chest_xray/
+chest_xray_split/
+gatekeeper_split/
+bone_fracture_data/
+
+# Model checkpoints
+checkpoints/
+
+# Large archives
+archive.zip
+
+# Results (regeneratable)
+results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+.agents/
+docs/
+
