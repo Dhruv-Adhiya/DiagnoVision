@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
-import { mockPredictImage } from '@/services/mockPredictionService';
-// When the real backend is ready, replace the import above with:
-// import { predictImage } from '@/services/api';
+import { predictImage } from '@/services/api';
 
 /**
  * Custom hook managing the full prediction workflow state machine.
  *
  * States: idle → uploading → processing → success | rejected | error
+ *
+ * Connected to the real FastAPI backend at /api/predict.
  *
  * @returns {{
  *   status: 'idle'|'uploading'|'processing'|'success'|'rejected'|'error',
@@ -42,17 +42,20 @@ export function usePrediction() {
     abortRef.current = controller;
 
     try {
-      /* transition to processing after initial upload progress */
-      const onProgress = (pct) => {
-        if (controller.signal.aborted) return;
-        setUploadProgress(pct);
-        if (pct >= 100) {
-          setStatus('processing');
-        }
-      };
-
-      // ── Use mock service (swap this single line for real API) ──
-      const response = await mockPredictImage(file, onProgress);
+      // ── Real API call to FastAPI backend ──
+      const response = await predictImage(file, true, {
+        signal: controller.signal,
+        onUploadProgress: (progressEvent) => {
+          if (controller.signal.aborted) return;
+          const pct = Math.round(
+            (progressEvent.loaded * 100) / (progressEvent.total || progressEvent.loaded)
+          );
+          setUploadProgress(pct);
+          if (pct >= 100) {
+            setStatus('processing');
+          }
+        },
+      });
 
       if (controller.signal.aborted) return;
 
@@ -70,6 +73,7 @@ export function usePrediction() {
 
       /* extract a user-friendly message */
       const message =
+        err?.response?.data?.detail?.message ||
         err?.response?.data?.message ||
         err?.message ||
         'An error occurred during analysis. Please try again.';
